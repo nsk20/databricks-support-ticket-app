@@ -35,7 +35,7 @@ def _lakebase_url() -> str:
         return env_url
     if _w is not None:
         secret = _w.secrets.get_secret(scope=_SCOPE, key=_KEY)
-        return base64.b64decode(secret.value).decode("utf-8")
+        return secret.value
     raise RuntimeError("LAKEBASE_URL environment variable is not set and Databricks SDK is unavailable.")
 
 
