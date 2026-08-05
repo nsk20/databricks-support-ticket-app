@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Databricks Internal Support Ticket Application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #121826;
+      --panel-header: #1a2235;
+      --border-color: #232e47;
+      --border-highlight: #34466b;
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-primary: #3b82f6;
+      --accent-primary-hover: #2563eb;
+      --accent-cyan: #06b6d4;
+      
+      --status-open-bg: rgba(59, 130, 246, 0.15);
+      --status-open-text: #60a5fa;
+      --status-open-border: rgba(59, 130, 246, 0.3);
+
+      --status-progress-bg: rgba(245, 158, 11, 0.15);
+      --status-progress-text: #fbbf24;
+      --status-progress-border: rgba(245, 158, 11, 0.3);
+
+      --status-resolved-bg: rgba(16, 185, 129, 0.15);
+      --status-resolved-text: #34d399;
+      --status-resolved-border: rgba(16, 185, 129, 0.3);
+
+      --priority-urgent: #ef4444;
+      --priority-high: #f97316;
+      --priority-medium: #3b82f6;
+      --priority-low: #64748b;
+      
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 64px;
+      background-color: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #ff3600, #e02400);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: 0 0 12px rgba(255, 54, 0, 0.4);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--accent-cyan);
+      font-weight: 500;
+      margin-left: 6px;
+      background: rgba(6, 182, 212, 0.12);
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .user-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background-color: var(--accent-primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Stats Dashboard Header */
+    .dashboard-header {
+      padding: 24px 28px 12px 28px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat-card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text-main);
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .stat-total .stat-icon { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+    .stat-open .stat-icon { background: var(--status-open-bg); color: var(--status-open-text); }
+    .stat-progress .stat-icon { background: var(--status-progress-bg); color: var(--status-progress-text); }
+    .stat-resolved .stat-icon { background: var(--status-resolved-bg); color: var(--status-resolved-text); }
+
+    /* Filter Toolbar */
+    .filter-bar {
+      padding: 8px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filter-tabs {
+      display: flex;
+      background-color: var(--panel-bg);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background-color: var(--panel-header);
+      color: var(--text-main);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Main Workspace 2-Column Layout */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      padding: 16px 28px 28px 28px;
+      min-height: 0;
+      height: calc(100vh - 200px);
+    }
+
+    /* Left Panel: Ticket List */
+    .tickets-panel {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      background-color: var(--panel-header);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .ticket-count-badge {
+      font-size: 11px;
+      background-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .tickets-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ticket-card {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ticket-card:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-highlight);
+      transform: translateX(2px);
+    }
+
+    .ticket-card.selected {
+      background-color: rgba(59, 130, 246, 0.08);
+      border-color: var(--accent-primary);
+      box-shadow: inset 3px 0 0 var(--accent-primary);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ticket-id {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .badge-status-open {
+      background: var(--status-open-bg);
+      color: var(--status-open-text);
+      border: 1px solid var(--status-open-border);
+    }
+
+    .badge-status-in_progress {
+      background: var(--status-progress-bg);
+      color: var(--status-progress-text);
+      border: 1px solid var(--status-progress-border);
+    }
+
+    .badge-status-resolved {
+      background: var(--status-resolved-bg);
+      color: var(--status-resolved-text);
+      border: 1px solid var(--status-resolved-border);
+    }
+
+    .badge-priority {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-priority-urgent { color: var(--priority-urgent); border-color: rgba(239, 68, 68, 0.4); }
+    .badge-priority-high { color: var(--priority-high); border-color: rgba(249, 115, 22, 0.4); }
+    .badge-priority-medium { color: var(--priority-medium); border-color: rgba(59, 130, 246, 0.4); }
+    .badge-priority-low { color: var(--priority-low); }
+
+    .badge-category {
+      background: rgba(6, 182, 212, 0.08);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* Right Panel: Detail View */
+    .detail-panel {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .empty-detail {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      gap: 12px;
+    }
+
+    .empty-detail-icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+
+    .detail-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .detail-header {
+      padding: 20px 24px;
+      background-color: var(--panel-header);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .detail-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-select-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    select.status-dropdown {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select.status-dropdown:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Thread Section */
+    .thread-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .message-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .message-content {
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      flex: 1;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .message-author {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .message-time {
+      font-size: 11.5px;
+      color: var(--text-dim);
+    }
+
+    .message-body {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    /* Reply Input Section */
+    .reply-box {
+      padding: 16px 24px;
+      background-color: var(--panel-header);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    textarea.reply-input {
+      width: 100%;
+      min-height: 80px;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13.5px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea.reply-input:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .reply-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Modal Backdrop */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 520px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transform: translateY(10px);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .close-btn:hover { color: var(--text-main); }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1100;
+    }
+
+    .toast {
+      background-color: var(--panel-header);
+      border: 1px solid var(--border-highlight);
+      border-left: 4px solid var(--accent-primary);
+      color: var(--text-main);
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.toast-error {
+      border-left-color: var(--danger);
+    }
+
+    .toast.toast-success {
+      border-left-color: #10b981;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Responsive adjustment */
+    @media (max-width: 900px) {
+      .dashboard-header { grid-template-columns: repeat(2, 1fr); }
+      .workspace { grid-template-columns: 1fr; height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="brand">
+      <div class="brand-icon">D</div>
+      <div class="brand-title">Databricks Support <span class="brand-subtitle">Lakebase Powered</span></div>
+    </div>
+    <div class="user-info">
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-email">Loading identity...</span>
+      </div>
+      <button class="btn-primary" id="btn-open-modal">
+        <span>+ New Ticket</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Statistics Dashboard -->
+  <header class="dashboard-header">
+    <div class="stat-card stat-total">
+      <div>
+        <div class="stat-label">Total Tickets</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-icon">📋</div>
+    </div>
+    <div class="stat-card stat-open">
+      <div>
+        <div class="stat-label">Open</div>
+        <div class="stat-value" id="stat-open">0</div>
+      </div>
+      <div class="stat-icon">📂</div>
+    </div>
+    <div class="stat-card stat-progress">
+      <div>
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value" id="stat-progress">0</div>
+      </div>
+      <div class="stat-icon">⏳</div>
+    </div>
+    <div class="stat-card stat-resolved">
+      <div>
+        <div class="stat-label">Resolved</div>
+        <div class="stat-value" id="stat-resolved">0</div>
+      </div>
+      <div class="stat-icon">✅</div>
+    </div>
+  </header>
+
+  <!-- Status Filter Toolbar -->
+  <div class="filter-bar">
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="tab-btn active" data-status="all">All Tickets</button>
+      <button class="tab-btn" data-status="open">Open</button>
+      <button class="tab-btn" data-status="in_progress">In Progress</button>
+      <button class="tab-btn" data-status="resolved">Resolved</button>
+    </div>
+  </div>
+
+  <!-- Workspace Grid -->
+  <main class="workspace">
+    
+    <!-- Left Column: Tickets List -->
+    <section class="tickets-panel">
+      <div class="panel-header">
+        <span class="panel-title">Support Queue</span>
+        <span class="ticket-count-badge" id="list-count">0 items</span>
+      </div>
+      <div class="tickets-list" id="tickets-list">
+        <div class="empty-detail">
+          <span>Loading support tickets...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Detail View -->
+    <section class="detail-panel" id="detail-panel">
+      <div class="empty-detail" id="empty-detail-state">
+        <div class="empty-detail-icon">💬</div>
+        <p>Select a ticket from the queue to view details and message thread.</p>
+      </div>
+
+      <div class="detail-container" id="active-detail-state" style="display: none;">
+        <div class="detail-header">
+          <div class="detail-header-top">
+            <div>
+              <div class="detail-meta">
+                <span class="ticket-id" id="detail-ticket-id">#0</span>
+                <span class="badge" id="detail-priority-badge">medium</span>
+                <span class="badge badge-category" id="detail-category-badge">general</span>
+              </div>
+              <h2 class="detail-title" id="detail-title">Ticket Title</h2>
+            </div>
+            <button class="btn-danger" id="btn-delete-ticket">Delete Ticket</button>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+            <div style="font-size: 12px; color: var(--text-dim);">
+              Created by <strong id="detail-created-by" style="color: var(--text-muted)">-</strong> on <span id="detail-created-at">-</span>
+            </div>
+
+            <div class="status-select-wrap">
+              <span class="status-select-label">Status:</span>
+              <select class="status-dropdown" id="status-dropdown">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="thread-container" id="thread-container">
+          <!-- Messages inserted dynamically -->
+        </div>
+
+        <div class="reply-box">
+          <textarea class="reply-input" id="reply-input" placeholder="Write a response or update to this ticket..."></textarea>
+          <div class="reply-actions">
+            <button class="btn-primary" id="btn-send-reply">Send Message</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Create Ticket Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Support Ticket</h3>
+        <button class="close-btn" id="modal-close">&times;</button>
+      </div>
+      <form id="create-ticket-form">
+        <div class="form-group">
+          <label class="form-label" for="ticket-title">Issue Title / Subject</label>
+          <input type="text" id="ticket-title" class="form-input" placeholder="Brief summary of your support request" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="ticket-priority">Priority</label>
+            <select id="ticket-priority" class="form-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ticket-category">Category</label>
+            <select id="ticket-category" class="form-select">
+              <option value="general" selected>General Inquiry</option>
+              <option value="technical">Technical / Infrastructure</option>
+              <option value="billing">Billing / Usage</option>
+              <option value="bug">Software Bug</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-primary">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal-card" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--danger)">Delete Ticket?</h3>
+        <button class="close-btn" id="delete-modal-close">&times;</button>
+      </div>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
+        Are you sure you want to permanently delete <strong id="delete-ticket-name" style="color: var(--text-main)">Ticket</strong>? All associated messages will be removed.
+      </p>
+      <div class="modal-footer" style="margin-top: 20px;">
+        <button type="button" class="btn-secondary" id="btn-delete-cancel">Cancel</button>
+        <button type="button" class="btn-danger" id="btn-delete-confirm">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // State management
+    let state = {
+      userEmail: '',
+      tickets: [],
+      currentFilter: 'all',
+      selectedTicketId: null,
+      selectedTicket: null
+    };
+
+    // DOM Elements
+    const userEmailEl = document.getElementById('user-email');
+    const userAvatarEl = document.getElementById('user-avatar');
+    const ticketsListEl = document.getElementById('tickets-list');
+    const listCountEl = document.getElementById('list-count');
+    const filterTabsEl = document.getElementById('filter-tabs');
+    
+    // Stats Elements
+    const statTotalEl = document.getElementById('stat-total');
+    const statOpenEl = document.getElementById('stat-open');
+    const statProgressEl = document.getElementById('stat-progress');
+    const statResolvedEl = document.getElementById('stat-resolved');
+
+    // Detail Panel Elements
+    const emptyDetailState = document.getElementById('empty-detail-state');
+    const activeDetailState = document.getElementById('active-detail-state');
+    const detailTitle = document.getElementById('detail-title');
+    const detailTicketId = document.getElementById('detail-ticket-id');
+    const detailPriorityBadge = document.getElementById('detail-priority-badge');
+    const detailCategoryBadge = document.getElementById('detail-category-badge');
+    const detailCreatedBy = document.getElementById('detail-created-by');
+    const detailCreatedAt = document.getElementById('detail-created-at');
+    const statusDropdown = document.getElementById('status-dropdown');
+    const threadContainer = document.getElementById('thread-container');
+    const replyInput = document.getElementById('reply-input');
+    const btnSendReply = document.getElementById('btn-send-reply');
+    const btnDeleteTicket = document.getElementById('btn-delete-ticket');
+
+    // Modal Elements
+    const btnOpenModal = document.getElementById('btn-open-modal');
+    const createModal = document.getElementById('create-modal');
+    const modalClose = document.getElementById('modal-close');
+    const btnModalCancel = document.getElementById('btn-modal-cancel');
+    const createTicketForm = document.getElementById('create-ticket-form');
+
+    const deleteModal = document.getElementById('delete-modal');
+    const deleteModalClose = document.getElementById('delete-modal-close');
+    const btnDeleteCancel = document.getElementById('btn-delete-cancel');
+    const btnDeleteConfirm = document.getElementById('btn-delete-confirm');
+    const deleteTicketName = document.getElementById('delete-ticket-name');
+
+    const toastContainer = document.getElementById('toast-container');
+
+    // Toast Notification Utility
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type === 'error' ? 'toast-error' : type === 'success' ? 'toast-success' : ''}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Helper: Format Date
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Fetch Current User
+    async function fetchUser() {
+      try {
+        const resp = await fetch('/api/me');
+        const data = await resp.json();
+        if (data.email) {
+          state.userEmail = data.email;
+          userEmailEl.textContent = data.email;
+          userAvatarEl.textContent = data.email.charAt(0).toUpperCase();
+        }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      }
+    }
+
+    // Fetch Statistics
+    async function fetchStats() {
+      try {
+        const resp = await fetch('/api/stats');
+        const data = await resp.json();
+        statTotalEl.textContent = data.total || 0;
+        statOpenEl.textContent = data.status?.open || 0;
+        statProgressEl.textContent = data.status?.in_progress || 0;
+        statResolvedEl.textContent = data.status?.resolved || 0;
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+      }
+    }
+
+    // Fetch Tickets List
+    async function fetchTickets() {
+      try {
+        const url = `/api/tickets?status=${state.currentFilter}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        state.tickets = data;
+        renderTicketsList();
+      } catch (err) {
+        showToast('Failed to load tickets: ' + err.message, 'error');
+      }
+    }
+
+    // Render Tickets List Left Column
+    function renderTicketsList() {
+      ticketsListEl.innerHTML = '';
+      listCountEl.textContent = `${state.tickets.length} items`;
+
+      if (state.tickets.length === 0) {
+        ticketsListEl.innerHTML = `
+          <div class="empty-detail">
+            <p>No support tickets found.</p>
+          </div>
+        `;
+        return;
+      }
+
+      state.tickets.forEach(ticket => {
+        const card = document.createElement('div');
+        card.className = `ticket-card ${state.selectedTicketId === ticket.ticket_id ? 'selected' : ''}`;
+        card.onclick = () => selectTicket(ticket.ticket_id);
+
+        const statusClass = `badge-status-${ticket.status}`;
+        const statusLabel = ticket.status === 'in_progress' ? 'In Progress' : ticket.status;
+        const priorityClass = `badge-priority-${ticket.priority}`;
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="ticket-id">#${ticket.ticket_id}</span>
+            <span class="badge ${statusClass}">${statusLabel}</span>
+          </div>
+          <h4 class="card-title">${escapeHtml(ticket.title)}</h4>
+          <div class="card-tags">
+            <span class="badge badge-priority ${priorityClass}">${ticket.priority}</span>
+            <span class="badge badge-category">${ticket.category}</span>
+          </div>
+          <div class="card-footer">
+            <span>By ${escapeHtml(ticket.created_by.split('@')[0])}</span>
+            <span>${formatDate(ticket.created_at)}</span>
+          </div>
+        `;
+        ticketsListEl.appendChild(card);
+      });
+    }
+
+    // Select and Fetch Ticket Details Right Column
+    async function selectTicket(ticketId) {
+      state.selectedTicketId = ticketId;
+      renderTicketsList(); // Refresh selection highlight
+
+      try {
+        const resp = await fetch(`/api/tickets/${ticketId}`);
+        if (!resp.ok) {
+          showToast('Could not load ticket details', 'error');
+          return;
+        }
+        const ticket = await resp.json();
+        state.selectedTicket = ticket;
+        renderTicketDetail();
+      } catch (err) {
+        showToast('Error loading ticket details: ' + err.message, 'error');
+      }
+    }
+
+    // Render Right Column Detail View
+    function renderTicketDetail() {
+      const ticket = state.selectedTicket;
+      if (!ticket) {
+        emptyDetailState.style.display = 'flex';
+        activeDetailState.style.display = 'none';
+        return;
+      }
+
+      emptyDetailState.style.display = 'none';
+      activeDetailState.style.display = 'flex';
+
+      detailTicketId.textContent = `#${ticket.ticket_id}`;
+      detailTitle.textContent = ticket.title;
+      detailCreatedBy.textContent = ticket.created_by;
+      detailCreatedAt.textContent = formatDate(ticket.created_at);
+
+      // Badges
+      detailPriorityBadge.className = `badge badge-priority badge-priority-${ticket.priority}`;
+      detailPriorityBadge.textContent = ticket.priority;
+      detailCategoryBadge.textContent = ticket.category;
+
+      statusDropdown.value = ticket.status;
+
+      // Render Messages Thread
+      threadContainer.innerHTML = '';
+      if (!ticket.messages || ticket.messages.length === 0) {
+        threadContainer.innerHTML = `
+          <div style="text-align: center; color: var(--text-dim); padding: 20px;">
+            No messages yet. Write a response below.
+          </div>
+        `;
+      } else {
+        ticket.messages.forEach(msg => {
+          const msgEl = document.createElement('div');
+          msgEl.className = 'message-item';
+          const authorInitial = msg.author ? msg.author.charAt(0).toUpperCase() : 'U';
+          msgEl.innerHTML = `
+            <div class="message-avatar">${authorInitial}</div>
+            <div class="message-content">
+              <div class="message-header">
+                <span class="message-author">${escapeHtml(msg.author)}</span>
+                <span class="message-time">${formatDate(msg.created_at)}</span>
+              </div>
+              <div class="message-body">${escapeHtml(msg.message_text)}</div>
+            </div>
+          `;
+          threadContainer.appendChild(msgEl);
+        });
+      }
+
+      // Scroll to bottom of thread
+      threadContainer.scrollTop = threadContainer.scrollHeight;
+    }
+
+    // Event: Change Status
+    statusDropdown.addEventListener('change', async (e) => {
+      if (!state.selectedTicketId) return;
+      const newStatus = e.target.value;
+      try {
+        const resp = await fetch(`/api/tickets/${state.selectedTicketId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (!resp.ok) throw new Error('Status update failed');
+        showToast(`Status updated to ${newStatus.replace('_', ' ')}`, 'success');
+        fetchStats();
+        fetchTickets();
+        selectTicket(state.selectedTicketId);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    // Event: Send Reply Message
+    btnSendReply.addEventListener('click', async () => {
+      const text = replyInput.value.trim();
+      if (!text) {
+        showToast('Please enter a message response.', 'error');
+        return;
+      }
+      if (!state.selectedTicketId) return;
+
+      btnSendReply.disabled = true;
+      try {
+        const resp = await fetch(`/api/tickets/${state.selectedTicketId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_text: text })
+        });
+        if (!resp.ok) throw new Error('Failed to send message');
+        replyInput.value = '';
+        showToast('Message posted successfully!', 'success');
+        selectTicket(state.selectedTicketId);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btnSendReply.disabled = false;
+      }
+    });
+
+    // Event: Delete Ticket Confirmation
+    btnDeleteTicket.addEventListener('click', () => {
+      if (!state.selectedTicket) return;
+      deleteTicketName.textContent = `Ticket #${state.selectedTicket.ticket_id} ("${state.selectedTicket.title}")`;
+      deleteModal.classList.add('active');
+    });
+
+    deleteModalClose.onclick = btnDeleteCancel.onclick = () => {
+      deleteModal.classList.remove('active');
+    };
+
+    btnDeleteConfirm.addEventListener('click', async () => {
+      if (!state.selectedTicketId) return;
+      try {
+        const resp = await fetch(`/api/tickets/${state.selectedTicketId}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Delete failed');
+        deleteModal.classList.remove('active');
+        showToast('Ticket deleted successfully.', 'success');
+        state.selectedTicketId = null;
+        state.selectedTicket = null;
+        renderTicketDetail();
+        fetchStats();
+        fetchTickets();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    // Filter Tabs Click
+    filterTabsEl.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tab-btn')) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        state.currentFilter = e.target.getAttribute('data-status');
+        fetchTickets();
+      }
+    });
+
+    // Modal Create Ticket Handlers
+    btnOpenModal.onclick = () => createModal.classList.add('active');
+    modalClose.onclick = btnModalCancel.onclick = () => createModal.classList.remove('active');
+
+    createTicketForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('ticket-title').value.trim();
+      const priority = document.getElementById('ticket-priority').value;
+      const category = document.getElementById('ticket-category').value;
+
+      if (!title) {
+        showToast('Please enter an issue title.', 'error');
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, priority, category })
+        });
+        if (!resp.ok) throw new Error('Failed to create ticket');
+        const newTicket = await resp.json();
+        showToast(`Ticket #${newTicket.ticket_id} created successfully!`, 'success');
+        createModal.classList.remove('active');
+        createTicketForm.reset();
+        fetchStats();
+        await fetchTickets();
+        selectTicket(newTicket.ticket_id);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    // Utility: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    // Initial Load
+    fetchUser();
+    fetchStats();
+    fetchTickets();
+  </script>
+</body>
+</html>
